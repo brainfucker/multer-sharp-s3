@@ -84,7 +84,7 @@ class S3Storage {
             sizes
                 .pipe(operators_1.map((size) => {
                 const resizerStream = transformer_1.default(sharpOpts, size);
-                if (size.suffix === 'original') {
+                if (size.original) {
                     size.Body = stream.pipe(sharp());
                 }
                 else {
@@ -102,26 +102,26 @@ class S3Storage {
             }), operators_1.mergeMap((size) => {
                 const { Body, ContentType } = size;
                 let newParams = Object.assign({}, params, { Body,
-                    ContentType, Key: `${params.Key}-${size.suffix}` });
+                    ContentType, Key: `${size.prefix}${params.Key}` });
                 const upload = opts.s3.upload(newParams);
-                let currentSize = { [size.suffix]: 0 };
+                let currentSize = { [size.prefix]: 0 };
                 upload.on('httpUploadProgress', function (ev) {
                     if (ev.total) {
-                        currentSize[size.suffix] = ev.total;
+                        currentSize[size.prefix] = ev.total;
                     }
                 });
                 const upload$ = rxjs_1.from(upload.promise().then((result) => {
                     // tslint:disable-next-line
                     const { Body } = size, rest = __rest(size, ["Body"]);
-                    return Object.assign({}, result, rest, { currentSize: size.currentSize || currentSize[size.suffix] });
+                    return Object.assign({}, result, rest, { currentSize: size.currentSize || currentSize[size.prefix] });
                 }));
                 return upload$;
             }), operators_1.toArray())
                 .subscribe((res) => {
                 const mapArrayToObject = res.reduce((acc, curr) => {
                     // tslint:disable-next-line
-                    const { suffix, ContentType, size, format, channels, options, currentSize } = curr, rest = __rest(curr, ["suffix", "ContentType", "size", "format", "channels", "options", "currentSize"]);
-                    acc[curr.suffix] = Object.assign({ ACL,
+                    const { prefix, ContentType, size, format, channels, options, currentSize } = curr, rest = __rest(curr, ["prefix", "ContentType", "size", "format", "channels", "options", "currentSize"]);
+                    acc[curr.prefix] = Object.assign({ ACL,
                         ContentDisposition,
                         StorageClass,
                         ServerSideEncryption,
