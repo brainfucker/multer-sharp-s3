@@ -102,7 +102,7 @@ class S3Storage {
             }), operators_1.mergeMap((size) => {
                 const { Body, ContentType } = size;
                 let newParams = Object.assign({}, params, { Body,
-                    ContentType, Key: `${size.prefix}${params.Key}` });
+                    ContentType: opts.ContentType || ContentType, Key: `${size.prefix}${params.Key}` });
                 const upload = opts.s3.upload(newParams);
                 let currentSize = { [size.prefix]: 0 };
                 upload.on('httpUploadProgress', function (ev) {
